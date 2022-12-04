@@ -117,31 +117,31 @@ inline std::tuple<std::vector<int>, std::vector<board>> read_input()
 {
 	std::ifstream in{ std::filesystem::path{ INPUT_DIR } / "input.txt" };
 
-	return {
+	std::istringstream rngStream{
 		[&]
 		{
 			std::string line{};
 			std::getline(in, line);
-			std::istringstream lineStream{ line };
-			std::vector<int> buf{};
-			for (std::string valStr; std::getline(lineStream, valStr, ',');)
-			{
-				buf.emplace_back(std::stoi(valStr));
-			}
+			return line;
+		}()
+	};
 
-			return buf;
-		}(),
+	return {
+		getline_range{ rngStream, ',' }
+		| ranges::views::transform(to_int)
+		| ranges::to_vector,
 		[&]
 		{
 			std::vector<board> boards{};
-			while (in.good())
+			for (std::istream_iterator<int> iter{ in }, end{}; iter != end;)
 			{
-				board& curBoard = boards.emplace_back();
-				for (auto& d : curBoard.container())
-				{
-					in >> d.emplace(0);
-				}
+				iter = std::ranges::copy_n(
+					iter,
+					25,
+					boards.emplace_back().container().begin()
+				).in;
 			}
+
 			return boards;
 		}()
 	};
